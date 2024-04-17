@@ -16,7 +16,7 @@ History is automatically saved in the context, settings.json:
        },
     },
    ```
-Results of writing to Google Sheet: [https://docs.google.com/spreadsheets](https://docs.google.com/spreadsheets/d/19Z2BzgGXrCZVaSvE-13J5S7vLnB-UpcbKV3ly07GjEc/edit#gid=0)
+Results of writing to Google Sheet: [https://docs.google.com/spreadsheets](https://docs.google.com/spreadsheets/d/19Z2BzgGXrCZVaSvE-13J5S7vLnB-UpcbKV3ly07GjEc/edit?usp=sharing)
 
 ### Contacts
 #### Konstantin
