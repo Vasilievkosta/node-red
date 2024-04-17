@@ -1,0 +1,148 @@
+[
+    {
+        "id": "826f385814ff14ba",
+        "type": "tab",
+        "label": "flow-gsheet",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "1817ee32.31c84f",
+        "type": "http in",
+        "z": "826f385814ff14ba",
+        "name": "HTTP Input",
+        "url": "/addData",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 490,
+        "y": 340,
+        "wires": [
+            [
+                "f1a9560e.209e28"
+            ]
+        ]
+    },
+    {
+        "id": "f1a9560e.209e28",
+        "type": "function",
+        "z": "826f385814ff14ba",
+        "name": "Add Data",
+        "func": "const newData = {\n    merchant: msg.payload.merchant,\n    taskNumber: msg.payload.taskNumber,\n    date_close: msg.payload.date_close,\n    cam1: msg.payload.cam1,\n    cam2: msg.payload.cam2,\n\tcam3: msg.payload.cam3,\n    cam4: msg.payload.cam4\n};\n\nconst valid = (typeof newData.merchant === 'string' &&\n\t\t\ttypeof newData.taskNumber === 'number' &&\n\t\t\ttypeof newData.date_close === 'string' &&\n\t\t\ttypeof newData.cam1 === 'number' &&\n\t\t\ttypeof newData.cam2 === 'number' &&\n\t\t\ttypeof newData.cam3 === 'number' &&\n\t\t\ttypeof newData.cam4 === 'number');\n\nif (!valid) {\n\t\n\tconst errorMessage = 'Invalid data format';    \n    msg.payload = {\n        statusCode: 400,\n        payload: {\n            error: errorMessage\n        }\n    };    \n    node.error(\"an example error\", msg);\n    return msg;\n   \n}\n\tlet dataArray = flow.get('taskHistory') || [];\n\n\tdataArray.push(newData);\n\nflow.set('taskHistory', dataArray);   \n\nreturn msg;\n\n\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 340,
+        "wires": [
+            [
+                "ea5a98ee.4d6dc"
+            ]
+        ]
+    },
+    {
+        "id": "ea5a98ee.4d6dc",
+        "type": "http response",
+        "z": "826f385814ff14ba",
+        "name": "HTTP Response",
+        "statusCode": "",
+        "headers": {},
+        "x": 920,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "5d27dd0307069526",
+        "type": "GSheet",
+        "z": "826f385814ff14ba",
+        "creds": "243e29a4031a6c91",
+        "method": "update",
+        "action": "",
+        "sheet": "19Z2BzgGXrCZVaSvE-13J5S7vLnB-UpcbKV3ly07GjEc",
+        "cells": "Cameras!A2:D2",
+        "flatten": false,
+        "name": "",
+        "x": 890,
+        "y": 600,
+        "wires": [
+            [
+                "217e72fda1dab3dc"
+            ]
+        ]
+    },
+    {
+        "id": "9d6896654f9a30ef",
+        "type": "inject",
+        "z": "826f385814ff14ba",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "#:(file)::taskHistory",
+        "payloadType": "flow",
+        "x": 500,
+        "y": 600,
+        "wires": [
+            [
+                "14ee206e16967601"
+            ]
+        ]
+    },
+    {
+        "id": "217e72fda1dab3dc",
+        "type": "debug",
+        "z": "826f385814ff14ba",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "14ee206e16967601",
+        "type": "function",
+        "z": "826f385814ff14ba",
+        "name": "function 4",
+        "func": "\nlet resultArray = [new Date().toLocaleString(),\"\", \"\"];\n\nlet flowArray = flow.get('taskHistory') || []\nnode.warn(flowArray);\n\nlet filteredData = [];\nfilterArray(flowArray)\n\nfunction filterArray(dataArray) {    \n    \n    dataArray.forEach(item => {\n        item.date_close = new Date(item.date_close).toLocaleString();\n    });\n\n    dataArray.sort((a, b) => a.date_close - b.date_close);\n\n    node.warn(dataArray);\n\n    let currentDate = new Date();\n    \n    let tenDaysAgo = new Date(currentDate);\n    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10); \n    \n\n    \n    for (let item of dataArray) {\n        // Проверяем, что дата элемента не позднее 10 дней от текущей даты\n        let itemDate = new Date(item.date_close);\n        if (itemDate > tenDaysAgo) {\n            // Для каждой камеры проверяем, что ее значение равно 1 и что предыдущая камера также равна 1\n            if (item.cam1 === 1 && checkPreviousCameras(dataArray, item, 'cam1')) {\n                filteredData.push({ merchant: item.merchant, taskNumber: item.taskNumber, date_close: item.date_close, camera: 'cam1' });\n            }\n            if (item.cam2 === 1 && checkPreviousCameras(dataArray, item, 'cam2')) {\n                filteredData.push({ merchant: item.merchant, taskNumber: item.taskNumber, date_close: item.date_close, camera: 'cam2' });\n            }\n            if (item.cam3 === 1 && checkPreviousCameras(dataArray, item, 'cam3')) {\n                filteredData.push({ merchant: item.merchant, taskNumber: item.taskNumber, date_close: item.date_close, camera: 'cam3' });\n            }\n            if (item.cam4 === 1 && checkPreviousCameras(dataArray, item, 'cam4')) {\n                filteredData.push({ merchant: item.merchant, taskNumber: item.taskNumber, date_close: item.date_close, camera: 'cam4' });\n            }\n        }\n    }\n\n    return filteredData;\n}\n\n// Функция для проверки, что предыдущий день для заданной камеры также равен 1\nfunction checkPreviousCameras(dataArray, currentItem, camera) {\n    // Получаем индекс текущего элемента в массиве\n    let index = dataArray.indexOf(currentItem);\n\n    // Если текущий элемент первый в массиве, предыдущего элемента нет\n    if (index === 0) {\n        return false;\n    }\n\n    // Получаем предыдущий элемент массива\n    let prevItem = dataArray[index - 1];\n\n    // Проверяем значение камеры для предыдущего элемента\n    return prevItem[camera] === 1;\n}\n\nnode.warn(filteredData);\nnode.warn(filteredData);\n\nlet jsonData = JSON.stringify(filteredData);\n\nresultArray[1] = filteredData[0]?.[\"merchant\"] || \"\";\nresultArray[2] = filteredData[0]?.[\"taskNumber\"] || \"\";\nresultArray[3] = jsonData;\n\nmsg.payload = resultArray;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 600,
+        "wires": [
+            [
+                "5d27dd0307069526"
+            ]
+        ]
+    },
+    {
+        "id": "243e29a4031a6c91",
+        "type": "gauth",
+        "name": "red-service-account@projectnodered-420507.iam.gserviceaccount.com"
+    }
+]
