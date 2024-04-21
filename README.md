@@ -3,6 +3,7 @@
 ## Project - Video Systems Monitoring
 
 **Creating an API based on node-red.**
+![Node-RED](https://img.shields.io/badge/Node--RED-%238F0000.svg?style=for-the-badge&logo=node-red&logoColor=white)
 
 Nodes that need to be installed additionally: [node-red-contrib-google-sheets](https://flows.nodered.org/node/node-red-contrib-google-sheets)
 
